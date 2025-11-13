@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Video, Users, User } from 'lucide-react'
+import { Video, Users, User, Settings } from 'lucide-react'
 
 export const Header = () => {
   const location = useLocation()
@@ -71,6 +71,19 @@ export const Header = () => {
           }}>
             <User size={18} />
             Profile
+          </Link>
+
+          <Link to="/settings" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: isActive('/settings') ? '#0071e3' : '#1d1d1f',
+            textDecoration: 'none',
+            fontSize: '14px',
+            fontWeight: 500
+          }}>
+            <Settings size={18} />
+            Settings
           </Link>
         </div>
       </nav>

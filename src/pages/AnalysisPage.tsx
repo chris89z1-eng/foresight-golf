@@ -1,19 +1,35 @@
 import { useState, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Upload, Play, Share2, Download } from 'lucide-react'
+import { Upload, Play, Share2, Download, RotateCcw, Save } from 'lucide-react'
+import { VideoAnalysis } from '../components/VideoAnalysis'
+import { ShareModal } from '../components/ShareModal'
 
 interface Analysis {
   score: number
   feedback: string[]
   improvements: string[]
+  metrics: {
+    backswingAngle: number
+    hipRotation: number
+    clubSpeed: number
+    impactPosition: number
+  }
 }
 
 export const AnalysisPage = () => {
   const [video, setVideo] = useState<string | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
+  const [showShare, setShowShare] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+
+  const overlays = [
+    { type: 'line' as const, x1: 100, y1: 150, x2: 200, y2: 250, label: 'Spine Angle: 45°', color: '#0071e3' },
+    { type: 'line' as const, x1: 200, y1: 250, x2: 300, y2: 200, label: 'Club Path', color: '#00c896' },
+    { type: 'circle' as const, cx: 200, cy: 250, r: 30, color: '#ff3b30' }
+  ]
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -27,23 +43,42 @@ export const AnalysisPage = () => {
   const analyzeSwing = async () => {
     setAnalyzing(true)
     
-    // Simulate AI analysis
-    await new Promise(resolve => setTimeout(resolve, 2500))
+    // Simulate AI analysis with realistic metrics
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    
+    const score = Math.floor(Math.random() * 20) + 75
     
     setAnalysis({
-      score: 82,
+      score,
       feedback: [
-        'Excellent hip rotation at impact',
+        'Excellent hip rotation at impact - 87° turn',
         'Good weight transfer through the swing',
-        'Maintain spine angle throughout backswing'
+        'Solid tempo and rhythm maintained',
+        'Strong grip pressure throughout'
       ],
       improvements: [
         'Widen your stance by 2 inches for better stability',
         'Keep your left arm straighter during backswing',
-        'Follow through should extend 15° higher'
-      ]
+        'Follow through should extend 15° higher',
+        'Increase club head speed by 5 mph'
+      ],
+      metrics: {
+        backswingAngle: 92,
+        hipRotation: 87,
+        clubSpeed: 98,
+        impactPosition: 85
+      }
     })
     setAnalyzing(false)
+  }
+
+  const saveAnalysis = () => {
+    alert('Analysis saved to your profile!')
+  }
+
+  const resetAnalysis = () => {
+    setVideo(null)
+    setAnalysis(null)
   }
 
   return (
@@ -87,13 +122,17 @@ export const AnalysisPage = () => {
             </motion.div>
           ) : (
             <div style={{ background: 'white', borderRadius: '16px', padding: '24px' }}>
-              <video
-                ref={videoRef}
-                src={video}
-                controls
-                style={{ width: '100%', borderRadius: '12px', marginBottom: '24px' }}
-              />
-              <div style={{ display: 'flex', gap: '12px' }}>
+              {analysis ? (
+                <VideoAnalysis videoUrl={video} overlays={overlays} />
+              ) : (
+                <video
+                  ref={videoRef}
+                  src={video}
+                  controls
+                  style={{ width: '100%', borderRadius: '12px', marginBottom: '24px' }}
+                />
+              )}
+              <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
                 <button
                   onClick={analyzeSwing}
                   disabled={analyzing}
@@ -117,22 +156,23 @@ export const AnalysisPage = () => {
                   {analyzing ? 'Analyzing...' : 'Analyze Swing'}
                 </button>
                 <button
-                  onClick={() => {
-                    setVideo(null)
-                    setAnalysis(null)
-                  }}
+                  onClick={resetAnalysis}
                   style={{
                     background: '#f5f5f7',
                     color: '#1d1d1f',
                     border: 'none',
-                    padding: '16px 24px',
+                    padding: '16px',
                     borderRadius: '12px',
                     fontSize: '16px',
                     fontWeight: 600,
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
                   }}
                 >
-                  New Video
+                  <RotateCcw size={20} />
+                  Reset
                 </button>
               </div>
             </div>
@@ -158,6 +198,30 @@ export const AnalysisPage = () => {
                 }}>
                   {analysis.score}/100
                 </div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '32px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px' }}>Key Metrics</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '24px' }}>
+                {[
+                  { label: 'Backswing', value: analysis.metrics.backswingAngle, unit: '°', target: 90 },
+                  { label: 'Hip Rotation', value: analysis.metrics.hipRotation, unit: '°', target: 85 },
+                  { label: 'Club Speed', value: analysis.metrics.clubSpeed, unit: 'mph', target: 95 },
+                  { label: 'Impact', value: analysis.metrics.impactPosition, unit: '%', target: 80 }
+                ].map((metric, i) => (
+                  <div key={i} style={{
+                    padding: '16px',
+                    background: '#f5f5f7',
+                    borderRadius: '12px'
+                  }}>
+                    <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '4px' }}>{metric.label}</div>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: metric.value >= metric.target ? '#00c896' : '#ff9500' }}>
+                      {metric.value}{metric.unit}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#6e6e73' }}>Target: {metric.target}{metric.unit}</div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -199,27 +263,46 @@ export const AnalysisPage = () => {
               </ul>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button style={{
-                flex: 1,
-                background: '#0071e3',
-                color: 'white',
-                border: 'none',
-                padding: '14px',
-                borderRadius: '12px',
-                fontSize: '15px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+              <button 
+                onClick={() => setShowShare(true)}
+                style={{
+                  background: '#0071e3',
+                  color: 'white',
+                  border: 'none',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}>
                 <Share2 size={18} />
                 Share
               </button>
+              <button 
+                onClick={saveAnalysis}
+                style={{
+                  background: '#00c896',
+                  color: 'white',
+                  border: 'none',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}>
+                <Save size={18} />
+                Save
+              </button>
               <button style={{
-                flex: 1,
                 background: '#f5f5f7',
                 color: '#1d1d1f',
                 border: 'none',
@@ -248,22 +331,32 @@ export const AnalysisPage = () => {
               <p style={{ fontSize: '15px', marginBottom: '12px', color: '#6e6e73' }}>
                 Want personalized coaching?
               </p>
-              <button style={{
-                background: '#0071e3',
-                color: 'white',
-                border: 'none',
-                padding: '12px 32px',
-                borderRadius: '980px',
-                fontSize: '15px',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}>
-                Find an Instructor
-              </button>
+              <Link to="/instructors">
+                <button style={{
+                  background: '#0071e3',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 32px',
+                  borderRadius: '980px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}>
+                  Find an Instructor
+                </button>
+              </Link>
             </div>
           </motion.div>
         )}
       </div>
+
+      {showShare && (
+        <ShareModal
+          onClose={() => setShowShare(false)}
+          title="Check out my golf swing analysis on ForeSight!"
+          url={window.location.href}
+        />
+      )}
     </main>
   )
 }

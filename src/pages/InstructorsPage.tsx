@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Star, MapPin, DollarSign, Award, Calendar } from 'lucide-react'
+import { Star, MapPin, DollarSign, Award, Calendar, Search } from 'lucide-react'
+import { BookingModal } from '../components/BookingModal'
 
 interface Instructor {
   id: number
@@ -68,18 +69,74 @@ const instructors: Instructor[] = [
 
 export const InstructorsPage = () => {
   const [selectedInstructor, setSelectedInstructor] = useState<Instructor | null>(null)
+  const [bookingInstructor, setBookingInstructor] = useState<Instructor | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterPrice, setFilterPrice] = useState<'all' | 'low' | 'mid' | 'high'>('all')
+
+  const handleBook = (date: string, time: string) => {
+    alert(`Booked session with ${bookingInstructor?.name} on ${date} at ${time}!`)
+    setBookingInstructor(null)
+    setSelectedInstructor(null)
+  }
+
+  const filteredInstructors = instructors.filter(instructor => {
+    const matchesSearch = instructor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         instructor.location.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesPrice = filterPrice === 'all' ||
+                        (filterPrice === 'low' && instructor.price < 120) ||
+                        (filterPrice === 'mid' && instructor.price >= 120 && instructor.price < 160) ||
+                        (filterPrice === 'high' && instructor.price >= 160)
+    return matchesSearch && matchesPrice
+  })
 
   return (
     <main style={{ flex: 1, padding: '48px 24px', maxWidth: '1400px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '48px', fontWeight: 700, marginBottom: '16px', letterSpacing: '-1px' }}>
         Professional Instructors
       </h1>
-      <p style={{ fontSize: '18px', color: '#6e6e73', marginBottom: '48px' }}>
+      <p style={{ fontSize: '18px', color: '#6e6e73', marginBottom: '32px' }}>
         Connect with certified golf professionals for personalized coaching
       </p>
 
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '32px', flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
+          <Search size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#6e6e73' }} />
+          <input
+            type="text"
+            placeholder="Search instructors or location..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '14px 14px 14px 48px',
+              borderRadius: '12px',
+              border: '2px solid #e8e8ed',
+              fontSize: '16px',
+              outline: 'none'
+            }}
+          />
+        </div>
+        <select
+          value={filterPrice}
+          onChange={(e) => setFilterPrice(e.target.value as any)}
+          style={{
+            padding: '14px 16px',
+            borderRadius: '12px',
+            border: '2px solid #e8e8ed',
+            fontSize: '16px',
+            cursor: 'pointer',
+            background: 'white'
+          }}
+        >
+          <option value="all">All Prices</option>
+          <option value="low">Under $120</option>
+          <option value="mid">$120 - $160</option>
+          <option value="high">$160+</option>
+        </select>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
-        {instructors.map((instructor, i) => (
+        {filteredInstructors.map((instructor, i) => (
           <motion.div
             key={instructor.id}
             initial={{ opacity: 0, y: 20 }}
@@ -127,21 +184,26 @@ export const InstructorsPage = () => {
               </div>
             </div>
 
-            <button style={{
-              width: '100%',
-              background: '#0071e3',
-              color: 'white',
-              border: 'none',
-              padding: '14px',
-              borderRadius: '12px',
-              fontSize: '15px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }}>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation()
+                setBookingInstructor(instructor)
+              }}
+              style={{
+                width: '100%',
+                background: '#0071e3',
+                color: 'white',
+                border: 'none',
+                padding: '14px',
+                borderRadius: '12px',
+                fontSize: '15px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}>
               <Calendar size={18} />
               Book Session
             </button>
@@ -233,26 +295,36 @@ export const InstructorsPage = () => {
               </div>
             </div>
 
-            <button style={{
-              width: '100%',
-              background: '#0071e3',
-              color: 'white',
-              border: 'none',
-              padding: '18px',
-              borderRadius: '12px',
-              fontSize: '17px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }}>
+            <button 
+              onClick={() => setBookingInstructor(selectedInstructor)}
+              style={{
+                width: '100%',
+                background: '#0071e3',
+                color: 'white',
+                border: 'none',
+                padding: '18px',
+                borderRadius: '12px',
+                fontSize: '17px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}>
               <Calendar size={20} />
               Book a Session with {selectedInstructor.name}
             </button>
           </motion.div>
         </motion.div>
+      )}
+
+      {bookingInstructor && (
+        <BookingModal
+          instructor={bookingInstructor}
+          onClose={() => setBookingInstructor(null)}
+          onBook={handleBook}
+        />
       )}
     </main>
   )
