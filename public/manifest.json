@@ -1,0 +1,20 @@
+{
+  "name": "ForeSight - AI Golf Swing Analysis",
+  "short_name": "ForeSight",
+  "description": "AI-powered golf swing analysis with professional coaching",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0071e3",
+  "theme_color": "#0071e3",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/golf-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["sports", "health"],
+  "screenshots": []
+}
